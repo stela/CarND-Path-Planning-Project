@@ -1,5 +1,6 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <fstream>
-#include <math.h>
 #include <uWS/uWS.h>
 #include <chrono>
 #include <iostream>
@@ -17,16 +18,16 @@ using json = nlohmann::json;
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
-double deg2rad(double x) { return x * pi() / 180; }
-double rad2deg(double x) { return x * 180 / pi(); }
+constexpr double deg2rad(double x) { return x * pi() / 180; }
+constexpr double rad2deg(double x) { return x * 180 / pi(); }
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
-string hasData(string s) {
+string hasData(const string &s) {
   auto found_null = s.find("null");
-  auto b1 = s.find_first_of("[");
-  auto b2 = s.find_first_of("}");
+  auto b1 = s.find_first_of('[');
+  auto b2 = s.find_first_of('}');
   if (found_null != string::npos) {
     return "";
   } else if (b1 != string::npos && b2 != string::npos) {
@@ -39,13 +40,14 @@ double distance(double x1, double y1, double x2, double y2)
 {
 	return sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
 }
-int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vector<double> &maps_y)
+
+allocator<double>::size_type ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vector<double> &maps_y)
 {
 
 	double closestLen = 100000; //large number
-	int closestWaypoint = 0;
+	allocator<double>::size_type closestWaypoint = 0;
 
-	for(int i = 0; i < maps_x.size(); i++)
+	for(allocator<double>::size_type i = 0; i < maps_x.size(); i++)
 	{
 		double map_x = maps_x[i];
 		double map_y = maps_y[i];
@@ -62,10 +64,10 @@ int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vect
 
 }
 
-int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
+allocator<double>::size_type NextWaypoint(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
 {
 
-	int closestWaypoint = ClosestWaypoint(x,y,maps_x,maps_y);
+	allocator<double>::size_type closestWaypoint = ClosestWaypoint(x,y,maps_x,maps_y);
 
 	double map_x = maps_x[closestWaypoint];
 	double map_y = maps_y[closestWaypoint];
@@ -78,10 +80,10 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
   if(angle > pi()/4)
   {
     closestWaypoint++;
-  if (closestWaypoint == maps_x.size())
-  {
-    closestWaypoint = 0;
-  }
+		if (closestWaypoint == maps_x.size())
+		{
+			closestWaypoint = 0;
+		}
   }
 
   return closestWaypoint;
@@ -90,9 +92,9 @@ int NextWaypoint(double x, double y, double theta, const vector<double> &maps_x,
 // Transform from Cartesian x,y coordinates to Frenet s,d coordinates
 vector<double> getFrenet(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
 {
-	int next_wp = NextWaypoint(x,y, theta, maps_x,maps_y);
+	allocator<double>::size_type next_wp = NextWaypoint(x,y, theta, maps_x,maps_y);
 
-	int prev_wp;
+	allocator<double>::size_type prev_wp;
 	prev_wp = next_wp-1;
 	if(next_wp == 0)
 	{
@@ -146,7 +148,7 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 		prev_wp++;
 	}
 
-	int wp2 = (prev_wp+1)%maps_x.size();
+	allocator<double>::size_type wp2 = (prev_wp+1)%maps_x.size();
 
 	double heading = atan2((maps_y[wp2]-maps_y[prev_wp]),(maps_x[wp2]-maps_x[prev_wp]));
 	// the x,y,s along the segment
@@ -161,7 +163,6 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 	double y = seg_y + d*sin(perp_heading);
 
 	return {x,y};
-
 }
 
 int main() {
@@ -208,11 +209,11 @@ int main() {
     // The 2 signifies a websocket event
     //auto sdata = string(data).substr(0, length);
     //cout << sdata << endl;
-    if (length && length > 2 && data[0] == '4' && data[1] == '2') {
+    if (length > 2 && data[0] == '4' && data[1] == '2') {
 
       auto s = hasData(data);
 
-      if (s != "") {
+      if (!s.empty()) {
         auto j = json::parse(s);
         
         string event = j[0].get<string>();
