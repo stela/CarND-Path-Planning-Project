@@ -250,8 +250,11 @@ int main() {
 			// TODO Just drives straight, off the road, from "getting started"
 			double dist_inc = 0.4;
 			for(int i = 0; i < 50; i++) {
-				next_x_vals.push_back(car_x + (dist_inc * i) * cos(deg2rad(car_yaw)));
-				next_y_vals.push_back(car_y + (dist_inc * i) * sin(deg2rad(car_yaw)));
+				double next_s = car_s + dist_inc * (i + 1);
+				double next_d = 6; // one and a half 4m lane to the right
+				const vector<double> &next_xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+				next_x_vals.push_back(next_xy[0]);
+				next_y_vals.push_back(next_xy[1]);
 			}
 
             msgJson["next_x"] = next_x_vals;
