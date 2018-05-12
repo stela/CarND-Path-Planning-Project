@@ -245,7 +245,37 @@ int main() {
 
             const auto prev_size = previous_path_x.size();
 
-            // TODO add vehicle-ahead or not logic
+            if (prev_size > 0)
+            {
+                car_s = end_path_s;
+            }
+
+            bool too_close = false;
+
+            // find ref_v to use
+            for (int i = 0; i < sensor_fusion.size(); i++)
+            {
+                // car is in my lane? then drive more slowly
+                float d = sensor_fusion[i][6];
+                if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2))
+                {
+                    double vx = sensor_fusion[i][3];
+                    double vy = sensor_fusion[i][4];
+                    double check_speed = sqrt(vx * vx + vy * vy);
+                    double check_car_s = sensor_fusion[i][5];
+                    // TODO rewrite as conditional for clarity
+                    // project future s value if using previous points, where we take action
+                    check_car_s += ((double) prev_size) * 0.02 * check_speed;
+                    if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
+                    {
+                        ref_vel = 29.5; // mph
+                    }
+                }
+            }
+
+
+
+            // TODO end add vehicle-ahead or not logic
 
             vector<double> ptsx;
             vector<double> ptsy;
