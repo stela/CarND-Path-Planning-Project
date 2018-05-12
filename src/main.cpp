@@ -268,6 +268,12 @@ int main() {
                     if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
                     {
                         too_close = true;
+                        // if tailgating another car, change lanes
+                        // TODO only change if safe to do so, and both ways
+                        if (lane > 0)
+                        {
+                            lane--;
+                        }
                     }
                 }
             }
@@ -315,8 +321,6 @@ int main() {
                 ptsy.push_back(ref_y_prev);
                 ptsy.push_back(ref_y);
             }
-
-            // TODO change lanes when safe to do so and slow car ahead
 
             // rest of the points based on splines, either stay in lane or lane-change
             vector<double> next_wp0 = getXY(car_s + 30, 2 + 4 * lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
