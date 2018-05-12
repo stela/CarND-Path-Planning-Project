@@ -204,8 +204,7 @@ int main() {
 
   int lane = 1;
 
-  // TODO start with 0 speed, speed up if no car ahead, otherwise slow down
-  double ref_vel = 49.5;
+  double ref_vel = 0.0;
   h.onMessage([&ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&lane](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -268,14 +267,20 @@ int main() {
                     check_car_s += ((double) prev_size) * 0.02 * check_speed;
                     if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
                     {
-                        ref_vel = 29.5; // mph
+                        too_close = true;
                     }
                 }
             }
 
-
-
-            // TODO end add vehicle-ahead or not logic
+            // speed up or decelerate with about 5m/s^2
+            if (too_close)
+            {
+                ref_vel -= 0.224;
+            }
+            else if (ref_vel < 49.5)
+            {
+                ref_vel += 0.224;
+            }
 
             vector<double> ptsx;
             vector<double> ptsy;
