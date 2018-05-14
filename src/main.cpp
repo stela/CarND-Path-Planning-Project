@@ -169,6 +169,17 @@ bool inOrNearLane(int lane, double d) {
     return d > (4 * lane - 1) && d < (4 * lane + 5);
 }
 
+double distanceAhead(const vector<double> &check_car, double car_s, int prev_size) {
+    double vx = check_car[3];
+    double vy = check_car[4];
+    double check_speed = sqrt(vx * vx + vy * vy);
+    double check_car_s = check_car[5];
+    // project future s value if using previous points, where we take action
+    // assume most of other's speed is in our s-direction
+    check_car_s += prev_size * 0.02 * check_speed;
+    return check_car_s - car_s;
+}
+
 int main() {
   uWS::Hub h;
 
@@ -253,34 +264,29 @@ int main() {
                 car_s = end_path_s;
             }
 
-            bool ahead_too_close = false;
-            bool left_too_close = false;
-            bool right_too_close = false;
+            bool blocked_ahead = false;
+            bool blocked_left = false;
+            bool blocked_right = false;
 
             // find ref_v to use
             for (auto &check_car : sensor_fusion) {
                 // car is in my lane? then drive more slowly
+                double check_car_ahead_s = distanceAhead(check_car, car_s, prev_size);
                 float check_car_d = check_car[6];
-                // our lane +- 1 meter to slow down on lane-changing cars too
+                // our lane plus 1 meter margin to slow down on lane-changing cars too
                 if (inOrNearLane(lane, check_car_d))
                 {
-                    double vx = check_car[3];
-                    double vy = check_car[4];
-                    double check_speed = sqrt(vx * vx + vy * vy);
-                    double check_car_s = check_car[5];
-
-                    // project future s value if using previous points, where we take action
-                    // assume most of other's speed is in our s-direction
-                    check_car_s += prev_size * 0.02 * check_speed;
-                    if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
+                    if (check_car_ahead_s > 0 && check_car_ahead_s < 30)
                     {
-                        ahead_too_close = true;
+                        blocked_ahead = true;
                     }
                 }
+                // TODO set blocked_left and blocked_right if road edge or check_car blocking
+
             }
 
             // speed up or decelerate with about 5m/s^2
-            if (ahead_too_close)
+            if (blocked_ahead)
             {
                 // TODO if not offroad and clear sideways, try left then right
                 // if behind another car, change lanes when safe to do so
