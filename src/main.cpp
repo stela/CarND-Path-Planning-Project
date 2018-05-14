@@ -165,6 +165,10 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 	return {x,y};
 }
 
+bool inOrNearLane(int lane, double d) {
+    return d > (4 * lane - 1) && d < (4 * lane + 5);
+}
+
 int main() {
   uWS::Hub h;
 
@@ -249,38 +253,43 @@ int main() {
                 car_s = end_path_s;
             }
 
-            bool too_close = false;
+            bool ahead_too_close = false;
+            bool left_too_close = false;
+            bool right_too_close = false;
 
             // find ref_v to use
-            for (int i = 0; i < sensor_fusion.size(); i++)
-            {
+            for (auto &check_car : sensor_fusion) {
                 // car is in my lane? then drive more slowly
-                float d = sensor_fusion[i][6];
-                if (d < (2 + 4 * lane + 2) && d > (2 + 4 * lane - 2))
+                float check_car_d = check_car[6];
+                // our lane +- 1 meter to slow down on lane-changing cars too
+                if (inOrNearLane(lane, check_car_d))
                 {
-                    double vx = sensor_fusion[i][3];
-                    double vy = sensor_fusion[i][4];
+                    double vx = check_car[3];
+                    double vy = check_car[4];
                     double check_speed = sqrt(vx * vx + vy * vy);
-                    double check_car_s = sensor_fusion[i][5];
-                    // TODO rewrite as conditional for clarity
+                    double check_car_s = check_car[5];
+
                     // project future s value if using previous points, where we take action
-                    check_car_s += ((double) prev_size) * 0.02 * check_speed;
+                    // assume most of other's speed is in our s-direction
+                    check_car_s += prev_size * 0.02 * check_speed;
                     if ((check_car_s > car_s) && ((check_car_s - car_s) < 30))
                     {
-                        too_close = true;
-                        // if tailgating another car, change lanes
-                        // TODO only change if safe to do so, and both ways
-                        if (lane > 0)
-                        {
-                            lane--;
-                        }
+                        ahead_too_close = true;
                     }
                 }
             }
 
             // speed up or decelerate with about 5m/s^2
-            if (too_close)
+            if (ahead_too_close)
             {
+                // TODO if not offroad and clear sideways, try left then right
+                // if behind another car, change lanes when safe to do so
+                if (lane > 0)
+                {
+                    const int desired_lane = lane - 1;
+                    lane = desired_lane;
+                }
+
                 ref_vel -= 0.224;
             }
             else if (ref_vel < 49.5)
@@ -436,3 +445,4 @@ int main() {
   }
   h.run();
 }
+
