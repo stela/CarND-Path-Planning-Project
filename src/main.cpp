@@ -165,8 +165,13 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 	return {x,y};
 }
 
-bool inOrNearLane(int lane, double d) {
-    return d > (4 * lane - 1) && d < (4 * lane + 5);
+bool isCarInLaneFromTo(int lane, double d, double s, double from_s, double to_s) {
+    const bool correctLane = d > (4 * lane - 1) && d < (4 * lane + 5);
+    if (!correctLane)
+    {
+        return false;
+    }
+    return s > from_s && s < to_s;
 }
 
 double distanceAhead(const vector<double> &check_car, double car_s, int prev_size) {
@@ -274,33 +279,38 @@ int main() {
                 double check_car_ahead_s = distanceAhead(check_car, car_s, prev_size);
                 float check_car_d = check_car[6];
                 // our lane plus 1 meter margin to slow down on lane-changing cars too
-                if (inOrNearLane(lane, check_car_d))
+                if (isCarInLaneFromTo(lane, check_car_d, check_car_ahead_s, 0, 30))
                 {
-                    if (check_car_ahead_s > 0 && check_car_ahead_s < 30)
-                    {
-                        blocked_ahead = true;
-                    }
+                   blocked_ahead = true;
                 }
-                // TODO set blocked_left and blocked_right if road edge or check_car blocking
-
+                // if leftmost lane, or left lane blocked by car
+                if (lane == 0 || isCarInLaneFromTo(lane - 1, check_car_d, check_car_ahead_s, -20, 30))
+                {
+                    blocked_left = true;
+                }
+                // if rightmost lane, or right lane blocked by car
+                if (lane == 2 || isCarInLaneFromTo(lane + 1, check_car_d, check_car_ahead_s, -20, 30))
+                {
+                    blocked_right = true;
+                }
             }
 
-            // speed up or decelerate with about 5m/s^2
-            if (blocked_ahead)
-            {
-                // TODO if not offroad and clear sideways, try left then right
-                // if behind another car, change lanes when safe to do so
-                if (lane > 0)
-                {
-                    const int desired_lane = lane - 1;
-                    lane = desired_lane;
-                }
-
+            if (blocked_ahead) {
                 ref_vel -= 0.224;
             }
             else if (ref_vel < 49.5)
             {
                 ref_vel += 0.224;
+            }
+
+            // speed up or decelerate with about 5m/s^2
+            if (blocked_ahead && !blocked_left)
+            {
+                lane--;
+            }
+            else if (blocked_ahead && !blocked_right)
+            {
+                lane++;
             }
 
             vector<double> ptsx;
