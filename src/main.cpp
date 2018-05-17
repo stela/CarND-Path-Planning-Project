@@ -284,16 +284,18 @@ int main() {
                    blocked_ahead = true;
                 }
                 // if leftmost lane, or left lane blocked by car
-                if (lane == 0 || isCarInLaneFromTo(lane - 1, check_car_d, check_car_ahead_s, -20, 30))
+                if (lane == 0 || isCarInLaneFromTo(lane - 1, check_car_d, check_car_ahead_s, -30, 40))
                 {
                     blocked_left = true;
                 }
                 // if rightmost lane, or right lane blocked by car
-                if (lane == 2 || isCarInLaneFromTo(lane + 1, check_car_d, check_car_ahead_s, -20, 30))
+                if (lane == 2 || isCarInLaneFromTo(lane + 1, check_car_d, check_car_ahead_s, -30, 40))
                 {
                     blocked_right = true;
                 }
             }
+
+            // cout << blocked_left << '\t' << blocked_ahead << '\t' << blocked_right << '\t' << "  L" << lane << endl;
 
             if (blocked_ahead) {
                 ref_vel -= 0.224;
