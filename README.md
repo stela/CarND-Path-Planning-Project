@@ -8,7 +8,7 @@ The code compiles and runs on my Mac. The Travis-CI build verifies that the code
 
 ## Valid Trajectories
 
-The car appears to drive for any length without incidents, after 15 miles and 20 minutes it was still driving without incident. With a shorter length of lanes left and right scanned than currently, there was occasionally a problem when changing to a lane with a vehicle having a different speed than our car.
+The car appears to drive for any length without incidents, I never saw it fail sooner than the required 4.32 miles, the longest I had patience to view was 15 miles and 20 minutes driving without an incident. There is occasionally a problem when changing to a lane with a vehicle having a different speed than our car.
 
 The car normally keeps the speed just under the 50 mph speed limit, it only goes slower when braking for a car nearby in front of it.
 
